@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with open(
-                '../../data/ingredients_load.csv', 'r',
+                'data/ingredients_load.csv', 'r',
                 encoding='utf-8') as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:

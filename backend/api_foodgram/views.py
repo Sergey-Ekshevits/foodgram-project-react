@@ -126,7 +126,7 @@ class RecipeViewSet(ModelViewSet):
             serializer_class=None,
             permission_classes=[permissions.IsAuthenticated, ])
     def download_shopping_cart(self, request):
-        response = HttpResponse()
+        response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename=Shopping.pdf'
 
         p = canvas.Canvas(response)

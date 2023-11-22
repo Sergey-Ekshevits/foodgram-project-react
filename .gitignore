@@ -131,3 +131,6 @@ dmypy.json
 # .idea
 .idea
 media
+postmap-collection
+docs
+infra

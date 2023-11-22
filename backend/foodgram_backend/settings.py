@@ -57,7 +57,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'foodgram.urls'
+ROOT_URLCONF = 'foodgram_backend.urls'
 
 TEMPLATES = [
     {
@@ -75,7 +75,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'foodgram.wsgi.application'
+WSGI_APPLICATION = 'foodgram_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -135,8 +135,8 @@ STATIC_ROOT = BASE_DIR / 'collected_static'
 FONT_PATH = BASE_DIR / 'static/fonts'
 
 MEDIA_URL = '/media/'
-# MEDIA_ROOT = '/var/www/foodgram/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/var/www/foodgram/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -153,9 +153,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 
-    'DEFAULT_PAGINATION_CLASS': 'foodgram.pagination.CustomPagination',
-
-
+    'DEFAULT_PAGINATION_CLASS': 'foodgram_backend.pagination.CustomPagination',
 }
 
 DJOSER = {
