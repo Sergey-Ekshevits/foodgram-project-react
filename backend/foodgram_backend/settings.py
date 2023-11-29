@@ -32,6 +32,8 @@ ALLOWED_HOSTS = ['foodgramprojects.sytes.net', '158.160.68.174', 'localhost']
 
 # Application definition
 
+CSRF_TRUSTED_ORIGINS = ['.foodgramprojects.sytes.net']
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
