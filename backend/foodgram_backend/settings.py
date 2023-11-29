@@ -130,8 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 AUTH_USER_MODEL = 'users.CustomUser'
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'collected_static'
+STATIC_URL = '/static/django/'
+STATIC_ROOT = '/app/static_django/'
 FONT_PATH = BASE_DIR / 'static/fonts'
 
 MEDIA_URL = '/media/'

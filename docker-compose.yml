@@ -18,7 +18,7 @@ services:
     depends_on:
       - db
     volumes:
-      - static:/backend_static
+      - static:/app/static_django/
       - media:/var/www/foodgram/media/
     restart: on-failure
   frontend:
@@ -36,6 +36,6 @@ services:
     ports:
       - ${SERVER_PORT}:80
     volumes:
-      - static:/static
+      - static:/static_django/
       - media:/var/www/foodgram/media/
     restart: on-failure
