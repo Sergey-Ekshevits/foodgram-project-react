@@ -36,6 +36,6 @@ services:
     ports:
       - ${SERVER_PORT}:80
     volumes:
-      - static:/app/static_django/
+      - static:/static
       - media:/var/www/foodgram/media/
     restart: on-failure
