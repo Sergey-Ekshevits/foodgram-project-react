@@ -38,4 +38,5 @@ services:
     volumes:
       - static:/static
       - media:/var/www/foodgram/media/
+      - ./docs/:/usr/share/nginx/html/api/docs/
     restart: on-failure
