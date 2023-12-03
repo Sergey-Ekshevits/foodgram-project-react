@@ -161,16 +161,19 @@ class RecipeCreateUpdateSerializer(RecipeBaseSerializer):
     ingredients = IngredientsRecipeCreateSerializer(
         source='recipe_ingredients', many=True, required=True)
 
+    def _create_ingredients(self, values_list, recipe):
+        for item in values_list:
+            recipe_ingredients = RecipeIngredients(
+                **item, recipe=recipe
+            )
+            recipe_ingredients.save()
+
     def create(self, validated_data):
         ingredients_list = validated_data.pop('recipe_ingredients')
         tags_list = validated_data.pop('tags')
         recipe = Recipe.objects.create(
             **validated_data)
-        print(ingredients_list)
-        for item in ingredients_list:
-            recipe_ingredients = RecipeIngredients(
-                **item, recipe=recipe)
-            recipe_ingredients.save()
+        self._create_ingredients(ingredients_list, recipe)
         for tag in tags_list:
             recipe.tags.add(tag)
         return recipe
@@ -184,29 +187,29 @@ class RecipeCreateUpdateSerializer(RecipeBaseSerializer):
         )
         ingredients_list = validated_data.get('recipe_ingredients')
         tags_list = validated_data.get('tags')
-        if not tags_list or not ingredients_list:
+        if not ingredients_list:
             raise ValidationError(
-                'Все поля должны быть заполнены'
+                'Поле ингредиента должно быть заполнено'
+            )
+        if not tags_list:
+            raise ValidationError(
+                'Поле тэг должно быть заполнено'
             )
         instance.ingredients.clear()
         instance.tags.clear()
-        for item in ingredients_list:
-            recipe_ingredients = RecipeIngredients(
-                **item, recipe=instance)
-            recipe_ingredients.save()
+        self._create_ingredients(ingredients_list, instance)
         for tag in tags_list:
             instance.tags.add(tag)
         instance.save()
         return instance
 
     def validate_ingredients(self, value):
-        items_list = []
-        for item in value:
-            if item.get('ingredient') in items_list:
-                raise ValidationError(
-                    'Нельзя добавить 2 одинаковых ингредиента'
-                )
-            items_list.append(item.get('ingredient'))
+
+        items_list = [item.get('ingredient') for item in value]
+        if len(set(items_list)) != len(items_list):
+            raise ValidationError(
+                'Нельзя добавить 2 одинаковых ингредиента'
+            )
         if not items_list:
             raise ValidationError(
                 'Список рецептов не может быть пустым'

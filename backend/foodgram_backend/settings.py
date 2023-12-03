@@ -27,8 +27,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'Not-empty-line')
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = os.getenv('DEBUG', 'False')
 DEBUG = False
-ALLOWED_HOSTS = ['foodgramprojects.sytes.net', '158.160.68.174', 'localhost']
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['foodgramprojects.sytes.net', '158.160.68.174', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -48,6 +47,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'api_foodgram.apps.ApiFoodgramConfig',
     'drf_yasg',
+    'colorfield'
 ]
 
 MIDDLEWARE = [

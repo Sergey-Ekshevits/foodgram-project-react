@@ -4,18 +4,10 @@ from rest_framework import serializers
 
 from .models import Subscription
 
-
 User = get_user_model()
 
 
 class CustomUserSerializer(UserSerializer):
-    def get_is_subscribed(self, instance):
-        request = self.context.get('request', None)
-        user = request.user
-        if not request or user.is_anonymous:
-            return False
-        return Subscription.objects.filter(user=user, author=instance).exists()
-
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -27,6 +19,13 @@ class CustomUserSerializer(UserSerializer):
             'first_name',
             'last_name',
             'is_subscribed')
+
+    def get_is_subscribed(self, instance):
+        request = self.context.get('request', None)
+        user = request.user
+        if not request or user.is_anonymous:
+            return False
+        return Subscription.objects.filter(user=user, author=instance).exists()
 
 
 class RecipeUserSerializer(CustomUserSerializer):

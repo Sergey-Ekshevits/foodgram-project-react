@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -53,83 +54,97 @@ class RecipeViewSet(ModelViewSet):
     permission_classes = [IsAuthorOrReadPermission,
                           permissions.IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self):
-        query = super().get_queryset()
-        is_favorited = self.request.query_params.get(
-            'is_favorited', None)
-        is_in_shopping_cart = self.request.query_params.get(
-            'is_in_shopping_cart', None)
-        if is_favorited == '1' and self.request.user.is_authenticated:
-            query = Recipe.objects.filter(
-                favorite_recipe__user=self.request.user)
-        if is_in_shopping_cart == '1' and self.request.user.is_authenticated:
-            query = Recipe.objects.filter(
-                shopping_cart_recipe__user=self.request.user)
-        return query
-
     def get_serializer_class(self):
         if self.request.method in ['GET']:
             return RecipeResponseSerializer
         return super().get_serializer_class()
 
-    def _handle_cart_or_favorite(self, request, pk, model, serializer_class):
+    def _create_cart_or_favorite(self, request, pk, model, serializer_class):
         user = request.user
-        if request.method == 'POST':
-            try:
-                recipe = Recipe.objects.get(id=pk)
-            except Recipe.DoesNotExist:
-                return Response({'errors': 'Рецепт не найден'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.get_serializer(recipe)
-            if model.objects.filter(user=user, recipe=recipe).exists():
-                return Response({"error": "Уже существует"},
-                                status=status.HTTP_400_BAD_REQUEST)
-            model.objects.create(user=user, recipe=recipe)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            try:
-                recipe = Recipe.objects.get(id=pk)
-            except Recipe.DoesNotExist:
-                return Response(
-                    {'errors': 'Рецепт не найден'},
-                    status=status.HTTP_404_NOT_FOUND)
-            item = model.objects.filter(user=user,
-                                        recipe=recipe)
-            if item:
-                item.delete()
-                return Response(
-                    {"detail": "Удалено"},
-                    status=status.HTTP_204_NO_CONTENT)
+        recipe = Recipe.objects.filter(id=pk).first()
+        if not recipe:
+            return Response({'errors': 'Рецепт не найден'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(recipe)
+        if model.objects.filter(user=user, recipe=recipe).exists():
+            return Response({"error": "Уже существует"},
+                            status=status.HTTP_400_BAD_REQUEST)
+        model.objects.create(user=user, recipe=recipe)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
+
+    def _delete_cart_or_favorite(self, request, pk, model, serializer_class):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        item = model.objects.filter(user=user,
+                                    recipe=recipe)
+        if item:
+            item.delete()
+            return Response(
+                {"detail": "Удалено"},
+                status=status.HTTP_204_NO_CONTENT)
         return Response({"error": "Некорректные данные"},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['POST', 'DELETE'],
+    @action(detail=True, methods=['POST', ],
             serializer_class=RecipeReadSerializer)
     def shopping_cart(self, request, pk):
-        return self._handle_cart_or_favorite(
+        return self._create_cart_or_favorite(
             request,
             pk,
             ShoppingCart,
             RecipeReadSerializer)
 
-    @action(detail=True, methods=['POST', 'DELETE'],
+    @shopping_cart.mapping.delete
+    def shopping_cart_delete(self, request, pk):
+        return self._delete_cart_or_favorite(
+            request,
+            pk,
+            ShoppingCart,
+            RecipeReadSerializer)
+
+    @action(detail=True, methods=['POST', ],
             serializer_class=RecipeReadSerializer)
     def favorite(self, request, pk):
-        return self._handle_cart_or_favorite(
+        return self._create_cart_or_favorite(
             request,
             pk,
             UserFavorite,
             RecipeReadSerializer)
 
+    @favorite.mapping.delete
+    def favorite_delete(self, request, pk):
+        return self._delete_cart_or_favorite(
+            request,
+            pk,
+            UserFavorite,
+            RecipeReadSerializer)
+
+    def get_pdf_list(self, items_list, title='Список покупок'):
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename={title}.pdf'
+
+        p = canvas.Canvas(response)
+        font_path = getattr(settings, 'FONT_PATH', None)
+        pdfmetrics.registerFont(TTFont('Arial', str(font_path) + '/arial.ttf'))
+        p.setFont("Arial", 12)
+        p.drawCentredString(300, 750, title)
+        y_coordinate = 700
+        for item, detail in items_list.items():
+            output_text = (f"-{item}: "
+                           f"{detail['amount']} "
+                           f"{detail['measure']}")
+            p.drawString(100, y_coordinate, output_text)
+            y_coordinate -= 20
+        p.showPage()
+        p.save()
+        return response
+
     @action(detail=False, methods=['GET'],
             serializer_class=None,
             permission_classes=[permissions.IsAuthenticated, ])
     def download_shopping_cart(self, request):
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename=Shopping.pdf'
-
-        p = canvas.Canvas(response)
 
         user_cart = (ShoppingCart.
                      objects.filter(user=self.request.user).
@@ -151,20 +166,8 @@ class RecipeViewSet(ModelViewSet):
                     'measure': measurement_unit}
             else:
                 ingredients_list[name]['amount'] += amount
-        font_path = getattr(settings, 'FONT_PATH', None)
-        pdfmetrics.registerFont(TTFont('Arial', str(font_path) + '/arial.ttf'))
-        p.setFont("Arial", 12)
-        p.drawCentredString(300, 750, "Список покупок")
-        y_coordinate = 700
-        for ingredient, detail in ingredients_list.items():
-            ingredient_text = (f"-{ingredient}: "
-                               f"{detail['amount']} "
-                               f"{detail['measure']}")
-            p.drawString(100, y_coordinate, ingredient_text)
-            y_coordinate -= 20
-        p.showPage()
-        p.save()
-        return response
+
+        return self.get_pdf_list(items_list=ingredients_list)
 
 
 class SubscriptionListView(mixins.ListModelMixin, GenericViewSet):

@@ -2,59 +2,62 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from colorfield.fields import ColorField
+
 User = get_user_model()
+MAX_LENGTH = 200
 
 
 class Tag(models.Model):
     """Модель тэгов"""
     name = models.CharField(
         'Название',
-        max_length=200,
+        max_length=MAX_LENGTH,
         unique=True,
         blank=False)
-    color = models.CharField(
+    color = ColorField(
         'Цвет',
-        max_length=7,
         unique=True,
         blank=False)
     slug = models.SlugField(
         'Slug',
-        max_length=200,
+        max_length=MAX_LENGTH,
         unique=True,
         blank=False)
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
     """Модель ингредиентов"""
     name = models.CharField(
         'Название',
-        max_length=200,
+        max_length=MAX_LENGTH,
         blank=False)
     measurement_unit = models.CharField(
         'Единица измерения',
-        max_length=200,
+        max_length=MAX_LENGTH,
         blank=False)
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
     """Модель рецепта"""
     name = models.CharField(
         'Название',
-        max_length=200,
+        max_length=MAX_LENGTH,
         blank=False)
     tags = models.ManyToManyField(
         Tag,
@@ -83,13 +86,13 @@ class Recipe(models.Model):
         auto_now_add=True,
         blank=False)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-created_at',)
+
+    def __str__(self):
+        return self.name
 
 
 class ShoppingCart(models.Model):
@@ -108,13 +111,13 @@ class ShoppingCart(models.Model):
         auto_now_add=True,
         blank=False)
 
-    def __str__(self):
-        return f'{self.user} добавил в список покупки {self.recipe}'
-
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
         ordering = ('-created_at',)
+
+    def __str__(self):
+        return f'{self.user} добавил в список покупки {self.recipe}'
 
 
 class UserFavorite(models.Model):
@@ -132,13 +135,13 @@ class UserFavorite(models.Model):
         'Дата создания', auto_now_add=True,
         blank=False)
 
-    def __str__(self):
-        return f'{self.user} добавил в избранное {self.recipe}'
-
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         ordering = ('-created_at',)
+
+    def __str__(self):
+        return f'{self.user} добавил в избранное {self.recipe}'
 
 
 class RecipeIngredients(models.Model):
@@ -157,9 +160,10 @@ class RecipeIngredients(models.Model):
         validators=[MinValueValidator(
             1, 'Должно быть не менее 1 единицы!')])
 
-    def __str__(self):
-        return f'{self.ingredient.name}, {self.amount}'
-
     class Meta:
         verbose_name = 'Ингредиент для рецепта'
         verbose_name_plural = 'Ингредиенты для рецепта'
+        ordering = ('id',)
+
+    def __str__(self):
+        return f'{self.ingredient.name}, {self.amount}'

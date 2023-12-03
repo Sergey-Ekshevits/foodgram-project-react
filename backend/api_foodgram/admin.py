@@ -1,8 +1,15 @@
 from django.contrib import admin
 from django.db.models import Count
-from . import models as my_models
+
+from .models import (Recipe,
+                     Tag,
+                     RecipeIngredients,
+                     Ingredient,
+                     ShoppingCart,
+                     UserFavorite)
 
 
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'total_favorites')
     list_filter = ('name', 'author', 'tags')
@@ -18,15 +25,14 @@ class RecipeAdmin(admin.ModelAdmin):
     total_favorites.short_description = 'Добавлений в избранное'
 
 
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
     list_filter = ('name',)
 
 
-admin.site.register(my_models.Recipe, RecipeAdmin)
-admin.site.register(my_models.Tag)
-admin.site.register(my_models.Ingredient, IngredientAdmin)
-admin.site.register(my_models.RecipeIngredients)
-admin.site.register(my_models.ShoppingCart)
-admin.site.register(my_models.UserFavorite)
+admin.site.register(Tag)
+admin.site.register(RecipeIngredients)
+admin.site.register(ShoppingCart)
+admin.site.register(UserFavorite)
