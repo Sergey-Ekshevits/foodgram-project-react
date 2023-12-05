@@ -120,6 +120,7 @@ class RecipeViewSet(ModelViewSet):
             UserFavorite,
             RecipeReadSerializer)
 
+    @staticmethod
     def get_pdf_list(self, items_list, title='Список покупок'):
 
         response = HttpResponse(content_type='application/pdf')
@@ -188,22 +189,13 @@ class SubscriptionCreateDeleteView(APIView):
 
     def post(self, request, id):
         current_user = request.user
-        try:
-            author = User.objects.get(id=id)
-        except User.DoesNotExist:
-            return Response(
-                {'errors': 'Пользователь не найден'},
-                status=status.HTTP_404_NOT_FOUND)
+        author = get_object_or_404(User, id=id)
         context = {'request': request}
         serializer = SubscriptionSerializer(
             author,
             data=request.data,
             context=context)
         if serializer.is_valid():
-            if author == current_user:
-                return Response(
-                    {'errors': 'Нельзя подписаться на себя'},
-                    status=status.HTTP_400_BAD_REQUEST)
             if Subscription.objects.filter(user=current_user,
                                            author=author).exists():
                 return Response(
@@ -216,12 +208,7 @@ class SubscriptionCreateDeleteView(APIView):
 
     def delete(self, request, id):
         current_user = request.user
-        try:
-            author = User.objects.get(id=id)
-        except User.DoesNotExist:
-            return Response(
-                {'errors': 'Пользователь не найден'},
-                status=status.HTTP_404_NOT_FOUND)
+        author = get_object_or_404(User, id=id)
         subscription = Subscription.objects.filter(user=current_user,
                                                    author=author)
         if subscription:

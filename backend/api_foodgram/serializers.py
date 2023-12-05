@@ -278,6 +278,17 @@ class SubscriptionSerializer(CustomUserSerializer):
         return RecipeReadSerializer(
             output, many=True, read_only=True).data
 
+    def validate(self, value):
+        request = self.context.get('request', None)
+        if request:
+            current_user_id = int(request.user.id)
+            author_id = int(request.parser_context.get('kwargs').get('id'))
+            if current_user_id == author_id:
+                raise ValidationError(
+                    'Нельзя подписаться на себя'
+                )
+            return value
+
     class Meta:
         model = User
         fields = (
