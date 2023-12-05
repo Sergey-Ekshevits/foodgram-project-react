@@ -121,7 +121,7 @@ class RecipeViewSet(ModelViewSet):
             RecipeReadSerializer)
 
     @staticmethod
-    def get_pdf_list(self, items_list, title='Список покупок'):
+    def get_pdf_list(items_list, title='Список покупок'):
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename={title}.pdf'
