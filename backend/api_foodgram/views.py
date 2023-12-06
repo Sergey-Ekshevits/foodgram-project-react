@@ -76,11 +76,9 @@ class RecipeViewSet(ModelViewSet):
     def _delete_cart_or_favorite(self, request, pk, model, serializer_class):
         recipe = get_object_or_404(Recipe, id=pk)
         get_object_or_404(model, recipe=recipe, user=request.user).delete()
-        return Response(
-                    {"detail": "Удалено"},
-                    status=status.HTTP_204_NO_CONTENT)
-
-        #Если необходимо возвращать ошибку 400 можно раскомментировать
+        return Response({"detail": "Удалено"},
+                        status=status.HTTP_204_NO_CONTENT)
+        # Если необходимо возвращать ошибку 400 можно раскомментировать
         # item = model.objects.filter(user=request.user,
         #                             recipe=recipe)
         # if item:
