@@ -11,6 +11,9 @@ from .models import (Ingredient, Recipe, RecipeIngredients, ShoppingCart, Tag,
                      UserFavorite)
 
 User = get_user_model()
+MAX_INGREDIENTS = 30
+
+MAX_TIME = 1200
 
 
 class Base64ImageField(serializers.ImageField):
@@ -214,6 +217,10 @@ class RecipeCreateUpdateSerializer(RecipeBaseSerializer):
             raise ValidationError(
                 'Список рецептов не может быть пустым'
             )
+        if len(items_list) > MAX_INGREDIENTS:
+            raise ValidationError(
+                'Слишком много ингредиентов'
+            )
         return value
 
     def validate_tags(self, value):
@@ -227,6 +234,13 @@ class RecipeCreateUpdateSerializer(RecipeBaseSerializer):
         if not items_list:
             raise ValidationError(
                 'Должен быть хотя бы один тэг'
+            )
+        return value
+
+    def validate_cooking_time(self, value):
+        if value > MAX_TIME:
+            raise ValidationError(
+                'Слишком большое время приготовления'
             )
         return value
 

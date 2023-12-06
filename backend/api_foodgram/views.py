@@ -74,17 +74,22 @@ class RecipeViewSet(ModelViewSet):
                         status=status.HTTP_201_CREATED)
 
     def _delete_cart_or_favorite(self, request, pk, model, serializer_class):
-        user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
-        item = model.objects.filter(user=user,
-                                    recipe=recipe)
-        if item:
-            item.delete()
-            return Response(
-                {"detail": "Удалено"},
-                status=status.HTTP_204_NO_CONTENT)
-        return Response({"error": "Некорректные данные"},
-                        status=status.HTTP_400_BAD_REQUEST)
+        get_object_or_404(model, recipe=recipe, user=request.user).delete()
+        return Response(
+                    {"detail": "Удалено"},
+                    status=status.HTTP_204_NO_CONTENT)
+
+        #Если необходимо возвращать ошибку 400 можно раскомментировать
+        # item = model.objects.filter(user=request.user,
+        #                             recipe=recipe)
+        # if item:
+        #     item.delete()
+        #     return Response(
+        #         {"detail": "Удалено"},
+        #         status=status.HTTP_204_NO_CONTENT)
+        # return Response({"error": "Некорректные данные"},
+        #                 status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['POST', ],
             serializer_class=RecipeReadSerializer)
